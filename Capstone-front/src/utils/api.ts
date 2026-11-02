@@ -1,3 +1,4 @@
+import { fetchWithTimeout, API_TIMEOUT_MS } from './requestTimeout';
 import type { BuildInput, ManualBuildSelection, ManualCategory, ManualPartListResponse, RecommendationResponse, OwnedEstimateRequest } from '../types/pc';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
@@ -6,24 +7,45 @@ export default API_BASE;
 /** Legacy EstimateRequest: { usage, budget, preference }. Multiple preferred brands
  * cannot be expressed by this DTO. Only the FIRST selected brand is submitted.
  * Do not send unsupported `brands`, `WORK`, or a hard-coded minimum budget override. */
-export async function fetchRecommendations(input: BuildInput): Promise<RecommendationResponse> {
+export async function fetchRecommendations(
+    input: BuildInput
+): Promise<RecommendationResponse> {
   const budget = Number(input.budget);
-  if (!Number.isSafeInteger(budget) || budget <= 0) throw new Error('예산은 0원보다 큰 정수로 입력해 주세요.');
-  if (!['GAMING', 'OFFICE', 'VIDEO_EDITING'].includes(input.purpose)) {
-    throw new Error('현재 서버에서 지원하지 않는 사용 용도입니다. 게이밍, 사무용, 영상 편집 중 선택해 주세요.');
+
+  if (!Number.isSafeInteger(budget) || budget <= 0) {
+    throw new Error('예산은 0원보다 큰 정수로 입력해 주세요.');
   }
-  const response = await fetch(`${API_BASE}/api/estimates/recommend`, {
+
+  if (!['GAMING', 'OFFICE', 'HIGH_END'].includes(input.purpose)) {
+    throw new Error(
+        '현재 서버에서 지원하지 않는 사용 용도입니다. 게이밍, 사무용, 하이엔드 중 선택해 주세요.'
+    );
+  }
+
+  const response = await fetchWithTimeout(`${API_BASE}/api/estimates/recommend`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+    },
     body: JSON.stringify({
       usage: input.purpose,
       budget,
-      preference: input.brands[0]?.toUpperCase() ?? null,
+      brands: input.brands
+          .map(brand => brand.trim().toUpperCase())
+          .filter(Boolean),
     }),
-  });
-  if (!response.ok) throw new Error(await getApiError(response, '자동 견적 요청 실패'));
+  }, API_TIMEOUT_MS.recommend, '자동 견적 생성');
+
+  if (!response.ok) {
+    throw new Error(await getApiError(response, '자동 견적 요청 실패'));
+  }
+
   const data = await response.json();
-  if (!data || !Array.isArray(data.recommendations)) throw new Error('추천 API 응답 형식이 올바르지 않습니다.');
+
+  if (!data || !Array.isArray(data.recommendations)) {
+    throw new Error('추천 API 응답 형식이 올바르지 않습니다.');
+  }
+
   return data;
 }
 
@@ -36,6 +58,17 @@ export async function getApiError(response: Response, fallback: string): Promise
   } catch {
     detail = raw.slice(0, 200);
   }
+  if (response.status === 400 || response.status === 422) {
+    return detail || '요청 조건을 확인하고 다시 시도해 주세요.';
+  }
+  if (response.status === 408 || response.status === 504) {
+    return detail || `${fallback}: 응답 시간이 초과되었습니다. 다시 시도해 주세요.`;
+  }
+  if (response.status === 429) return detail || '요청이 많습니다. 잠시 후 다시 시도해 주세요.';
+  if (response.status === 502 || response.status === 503) {
+    return detail || '서버 또는 AI 서비스가 일시적으로 응답하지 않습니다. 다시 시도해 주세요.';
+  }
+  if (response.status >= 500) return `${fallback} (HTTP ${response.status}): 서버에서 오류가 발생했습니다.`;
   return `${fallback} (HTTP ${response.status})${detail ? `: ${detail}` : ''}`;
 }
 
@@ -44,12 +77,12 @@ export async function fetchManualParts(
   selectedParts: Partial<ManualBuildSelection> = {},
   signal?: AbortSignal,
 ): Promise<ManualPartListResponse> {
-  const response = await fetch(`${API_BASE}/api/manual-build/parts`, {
+  const response = await fetchWithTimeout(`${API_BASE}/api/manual-build/parts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify({ targetCategory, selectedParts }),
     signal,
-  });
+  }, API_TIMEOUT_MS.manualParts, '부품 목록 조회');
   if (!response.ok) throw new Error(await getApiError(response, `${targetCategory} 부품 목록 요청 실패`));
   const data = await response.json();
   if (!data || !Array.isArray(data.parts)) throw new Error('수동 조립 API 응답 형식이 올바르지 않습니다.');
@@ -80,7 +113,7 @@ export async function fetchOwnedRecommendations(
   if (!['GAMING', 'OFFICE', 'VIDEO_EDITING'].includes(usage)) {
     throw new Error('지원하지 않는 사용 용도입니다.');
   }
-  const response = await fetch(`${API_BASE}/api/estimates/recommend-with-owned`, {
+  const response = await fetchWithTimeout(`${API_BASE}/api/estimates/recommend-with-owned`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify({
@@ -90,7 +123,7 @@ export async function fetchOwnedRecommendations(
       ...(request.preference ? { preference: request.preference } : {}),
     }),
     signal,
-  });
+  }, API_TIMEOUT_MS.ownedRecommend, '보유 부품 자동 견적 생성');
   if (!response.ok) {
     // 400/422에서는 백엔드 ApiErrorHandler가 반환한 message를 사용자에게 보여 줍니다.
     // 404/405/501도 임의로 '미구현'이라 단정하지 않고 실제 HTTP 상태를 알립니다.

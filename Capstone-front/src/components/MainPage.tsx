@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, BookOpen, Wrench, BarChart3, ChevronRight, Sparkles, ChevronLeft, Compass, Target, MessageSquareCode, ArrowRight } from 'lucide-react';
+import { 
+  Zap, 
+  BookOpen, 
+  Wrench, 
+  BarChart3, 
+  ChevronRight, 
+  ChevronLeft, 
+  Compass, 
+  Target, 
+  MessageSquareCode, 
+  ArrowRight,
+  SlidersHorizontal 
+} from 'lucide-react';
 
 interface MainPageProps {
   onStart: () => void;
@@ -30,7 +42,7 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
     {
       step: "STEP 2",
       title: "🗣️ AI와 대화하듯 편하게 말해서 요청하기",
-      desc: "'배그 국민옵션 150만원대'처럼 일상적인 문장으로 물어보면 Gemini AI가 최적의 견적을 자동으로 파싱합니다.",
+      desc: "'배그 국민옵션 150만원대'처럼 일상적인 문장으로 물어보면 AI가 최적의 견적을 자동으로 파싱합니다.",
       badge: "초보자 최적화 AI 추천",
       badgeColor: "bg-purple-500/20 text-purple-300 border-purple-400/30",
       btnText: "AI 대화 견적 시작하기",
@@ -66,7 +78,7 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 md:px-8 flex flex-col items-center">
       
-      {/* 표준 너비 컨테이너 (max-w-6xl 정렬) */}
+      {/* 표준 너비 컨테이너 */}
       <div className="max-w-6xl w-full flex flex-col items-center">
         
         {/* 최상단 타이틀 */}
@@ -76,11 +88,6 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
           transition={{ duration: 0.4 }}
           className="w-full text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200/60 rounded-full text-blue-600 text-sm font-bold tracking-wide mb-5 shadow-2xs select-none">
-            <Sparkles size={16} />
-            GEMINI 1.5 PRO & COMPATIBILITY RULE ENGINE ACTIVE
-          </div>
-
           <h1 className="text-5xl md:text-6xl font-black mb-4 tracking-tight leading-none text-slate-900 select-none">
             <motion.span 
               className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 cursor-pointer drop-shadow-xs"
@@ -194,17 +201,19 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
           </div>
         </div>
 
-        {/* 4열 기능 메뉴 카드 */}
+        {/* 5열 기능 메뉴 카드 그리드 */}
         <div className="w-full">
           <div className="flex items-center gap-2 mb-5 px-1">
             <Compass size={20} className="text-slate-600" />
             <h3 className="font-bold text-slate-800 text-base">전체 서비스 기능 메뉴</h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            
+            {/* 1. 새로운 PC 견적 */}
             <button
               onClick={onStart}
-              className="bg-white border border-slate-200 p-7 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-blue-500 hover:shadow-md hover:-translate-y-1"
+              className="bg-white border border-slate-200 p-6 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-blue-500 hover:shadow-md hover:-translate-y-1"
             >
               <div>
                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
@@ -220,9 +229,10 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
               </span>
             </button>
 
+            {/* 2. 보유 부품 활용 */}
             <button
               onClick={onOwnedStart}
-              className="bg-white border border-slate-200 p-7 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-purple-500 hover:shadow-md hover:-translate-y-1"
+              className="bg-white border border-slate-200 p-6 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-purple-500 hover:shadow-md hover:-translate-y-1"
             >
               <div>
                 <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-xs">
@@ -238,9 +248,29 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
               </span>
             </button>
 
+            {/* 3. 수동 PC 조립 (디자인 통일 및 3번째 배치) */}
+            <button
+              onClick={onManualBuildStart}
+              className="bg-white border border-slate-200 p-6 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-cyan-500 hover:shadow-md hover:-translate-y-1"
+            >
+              <div>
+                <div className="w-12 h-12 bg-cyan-50 rounded-2xl flex items-center justify-center mb-6 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-xs">
+                  <SlidersHorizontal size={22} />
+                </div>
+                <h4 className="font-bold text-slate-900 text-lg mb-2 group-hover:text-cyan-600 transition-colors">수동 PC 조립</h4>
+                <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                  실제 DB에서 8종 부품을 직접 골라 담고 호환성 검증
+                </p>
+              </div>
+              <span className="text-sm text-cyan-600 font-bold mt-8 flex items-center">
+                바로가기 <ChevronRight size={16} className="ml-0.5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </button>
+
+            {/* 4. 벤치마크 마스터 */}
             <button
               onClick={onDbStart}
-              className="bg-white border border-slate-200 p-7 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-emerald-500 hover:shadow-md hover:-translate-y-1"
+              className="bg-white border border-slate-200 p-6 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-emerald-500 hover:shadow-md hover:-translate-y-1"
             >
               <div>
                 <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-xs">
@@ -256,9 +286,10 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
               </span>
             </button>
 
+            {/* 5. 부품 기초 가이드 */}
             <button
               onClick={onGuide}
-              className="bg-white border border-slate-200 p-7 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-indigo-500 hover:shadow-md hover:-translate-y-1"
+              className="bg-white border border-slate-200 p-6 rounded-3xl text-left flex flex-col justify-between group transition-all shadow-xs hover:border-indigo-500 hover:shadow-md hover:-translate-y-1"
             >
               <div>
                 <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs">
@@ -273,13 +304,8 @@ export function MainPage({ onStart, onAiStart, onOwnedStart, onDbStart, onGuide,
                 바로가기 <ChevronRight size={16} className="ml-0.5 group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
+
           </div>
-          {/* 수동 조립 진입점만 추가. 기존 4개 서비스 카드의 UI와 배치는 유지합니다. */}
-          <button onClick={onManualBuildStart} className="mt-5 w-full bg-white border border-slate-200 p-5 rounded-3xl text-left flex items-center gap-4 group transition-all shadow-xs hover:border-indigo-500 hover:shadow-md">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white shrink-0"><Wrench size={22}/></div>
-            <div className="flex-1"><h4 className="font-bold text-slate-900 text-lg">수동 PC 조립</h4><p className="text-sm text-slate-600 font-medium">실제 DB에서 8종 부품을 직접 선택하고 호환성 확인하기</p></div>
-            <ChevronRight className="text-indigo-600" size={20}/>
-          </button>
         </div>
 
       </div>

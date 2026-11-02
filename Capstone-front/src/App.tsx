@@ -6,13 +6,12 @@ import { NaturalInputForm } from './components/NaturalInputForm';
 import { OwnedPartInputForm } from './components/OwnedPartInputForm';
 import { ManualBuildPage } from './components/ManualBuildPage';
 import { PartsListPage } from './components/PartsListPage'; 
-import { LoadingScreen } from './components/LoadingScreen';
 import { ResultsPage } from './components/ResultsPage';
 import { GuidePage } from './components/GuidePage';
 import { Footer } from './components/Footer';
 import { ArrowLeft } from 'lucide-react';
 
-type ScreenType = 'start' | 'main' | 'input' | 'owned-input' | 'db-list' | 'manual-build' | 'loading' | 'result' | 'guide';
+type ScreenType = 'start' | 'main' | 'input' | 'owned-input' | 'db-list' | 'manual-build' | 'result' | 'guide';
 
 const App: React.FC = () => {
   const [screen, setScreenState] = useState<ScreenType>('start');
@@ -53,11 +52,10 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // 결과 페이지가 자체적으로 API 요청을 실행하고 로딩 화면을 유지합니다.
+  // 시간 기반 자동 전환을 사용하지 않습니다.
   const handleComplete = () => {
-    navigateTo('loading');
-    setTimeout(() => {
-      navigateTo('result', true); // 로딩 스크린은 히스토리에 남기지 않고 결과 화면으로 전환
-    }, 2000);
+    navigateTo('result');
   };
 
   return (
@@ -186,8 +184,6 @@ const App: React.FC = () => {
           </div>
         )}
         
-        {screen === 'loading' && <LoadingScreen />}
-        
         {screen === 'result' && (
           <ResultsPage onRestart={() => {
             sessionStorage.removeItem('pcBuildData');
@@ -200,7 +196,7 @@ const App: React.FC = () => {
       </div>
 
       {/* 전역 푸터 */}
-      {screen !== 'start' && screen !== 'loading' && <Footer />}
+      {screen !== 'start' && <Footer />}
     </div>
   );
 };

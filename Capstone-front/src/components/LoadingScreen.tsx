@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Cpu, HardDrive, Zap, TrendingUp } from 'lucide-react';
 
 export function LoadingScreen() {
-  const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -16,30 +14,30 @@ export function LoadingScreen() {
   ];
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    // 실제 진행률 API는 아직 없으므로 95%에서 정지하는 UI용 진행률입니다.
+    // 로딩 화면 종료는 ResultsPage의 실제 API 성공/오류 응답으로만 결정됩니다.
+    const interval = window.setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => navigate('/results'), 300);
-          return 100;
-        }
-        return prev + 1;
+        if (prev >= 95) return 95;
+        const increment = prev < 55 ? 2 : prev < 80 ? 1 : 0.25;
+        return Math.min(95, prev + increment);
       });
-    }, 30);
+    }, 550);
 
-    return () => clearInterval(interval);
-  }, [navigate]);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
-    const stepInterval = setInterval(() => {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
-    }, 2000);
+    // 아래 단계 변화는 시각적 안내이며 서버의 실제 실행 단계를 의미하지 않습니다.
+    const stepInterval = window.setInterval(() => {
+      setCurrentStep(prev => Math.min(prev + 1, 3));
+    }, 8000);
 
-    return () => clearInterval(stepInterval);
+    return () => window.clearInterval(stepInterval);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[100] min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center px-4 overflow-y-auto" role="status" aria-label="PC 견적 분석 중">
       <div className="max-w-lg w-full">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -69,7 +67,7 @@ export function LoadingScreen() {
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600">진행 상황</span>
-              <span className="text-sm font-medium text-blue-600">{progress}%</span>
+              <span className="text-sm font-medium text-blue-600">{Math.floor(progress)}%</span>
             </div>
             <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden">
               <motion.div
@@ -143,6 +141,7 @@ export function LoadingScreen() {
             className="mt-6 text-center text-sm text-gray-500"
           >
             최신 시장 데이터를 기반으로 분석하고 있습니다
+            <p className="mt-1 text-xs text-gray-400">진행률은 안내용이며, 실제 견적 계산이 완료되면 자동으로 이동합니다.</p>
           </motion.div>
         </motion.div>
       </div>
